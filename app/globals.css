@@ -662,6 +662,8 @@ h3 {
 /* ===== Compact Input Form ===== */
 .compact-form {
   padding: 1rem 1.5rem;
+  background: #13131a; /* Even darker to match screenshot */
+  border: 1px solid #2d2d3d;
 }
 
 .compact-form-header {
@@ -771,3 +773,98 @@ h3 {
     width: 50%;
   }
 }
+
+/* Static Glass Card (No Hover Effect, Darker Background) */
+.glass-card-static {
+  background: var(--bg-card-hover); /* Use the darker hover color by default */
+  backdrop-filter: blur(20px);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius);
+  padding: 2rem;
+  box-shadow: var(--shadow-md);
+  /* No hover transition for transform or bg */
+}
+
+/* Hide Date Picker Icon */
+.compact-input::-webkit-calendar-picker-indicator {
+  display: none;
+  -webkit-appearance: none;
+}
+
+/* Adjust date input text alignment if needed */
+.date-range-group .compact-input {
+  text-align: center;
+}
+
+/* ===== Navbar ===== */
+.navbar {
+  background: rgba(20, 20, 31, 0.95);
+  border-bottom: 1px solid var(--border-color);
+  padding: 0.75rem 0;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  backdrop-filter: blur(10px);
+}
+
+.navbar-container {
+  padding: 0 2rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  width: 100%;
+}
+
+.navbar-logo-icon {
+  width: 42px;
+  height: 42px;
+  background: var(--accent-primary);
+  border-radius: 0; /* Square as per request image */
+  flex-shrink: 0;
+}
+
+.navbar-content {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.navbar-title {
+  font-size: 1.5rem;
+  line-height: 1.1;
+  margin: 0;
+  background: var(--gradient-primary);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  font-weight: 700;
+}
+
+.navbar-subtitle {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  margin: 0;
+  font-weight: 400;
+  opacity: 0.8;
+}
+
+@media (max-width: 768px) {
+  .navbar-container {
+    padding: 0 1rem;
+  }
+  
+  .navbar-title {
+    font-size: 1.25rem;
+  }
+  
+  .navbar-subtitle {
+   font-size: 0.75rem;
+    display: none; /* Hide subtitle on mobile if needed, or keep it */
+  }
+  
+  .navbar-logo-icon {
+    width: 36px;
+    height: 36px;
+  }
+}
+

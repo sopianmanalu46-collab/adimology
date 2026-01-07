@@ -24,31 +24,30 @@ function formatResultForCopy(result: StockAnalysisResult): string {
   };
 
   const lines = [
-    `ANALISIS SAHAM: ${input.emiten.toUpperCase()}`,
-    `Periode: ${input.fromDate} s/d ${input.toDate}`,
+    `ADIMOLGY: ${input.emiten.toUpperCase()}`,
+    `${input.fromDate} s/d ${input.toDate}`,
     ``,
     `TOP BROKER`,
     `Broker: ${stockbitData.bandar}`,
-    `Barang Bandar: ${formatNumber(stockbitData.barangBandar)} lot`,
-    `Rata-rata Harga: Rp ${formatNumber(stockbitData.rataRataBandar)}`,
+    `∑ Brg: ${formatNumber(stockbitData.barangBandar)} lot`,
+    `Avg Harga: Rp ${formatNumber(stockbitData.rataRataBandar)}`,
     ``,
     `MARKET DATA`,
     `Harga: Rp ${formatNumber(marketData.harga)}`,
     `Offer Max: Rp ${formatNumber(marketData.offerTeratas)}`,
     `Bid Min: Rp ${formatNumber(marketData.bidTerbawah)}`,
     `Fraksi: ${formatNumber(marketData.fraksi)}`,
-    `Total Bid: ${formatNumber(marketData.totalBid / 100)}`,
-    `Total Offer: ${formatNumber(marketData.totalOffer / 100)}`,
+    `∑ Bid: ${formatNumber(marketData.totalBid / 100)}`,
+    `∑ Offer: ${formatNumber(marketData.totalOffer / 100)}`,
     ``,
     `CALCULATIONS`,
-    `Total Papan: ${formatNumber(calculated.totalPapan)}`,
-    `Rata² Bid/Offer: ${formatNumber(calculated.rataRataBidOfer)}`,
-    `a (5% dari rata² bandar): ${formatNumber(calculated.a)}`,
-    `p (Barang/Rata² Bid Offer): ${formatNumber(calculated.p)}`,
+    `∑ Papan: ${formatNumber(calculated.totalPapan)}`,
+    `Avg Bid-Offer: ${formatNumber(calculated.rataRataBidOfer)}`,
+    `a (5% avg bandar): ${formatNumber(calculated.a)}`,
+    `p (Brg/Avg Bid-Offer): ${formatNumber(calculated.p)}`,
     ``,
-    `TARGET PRICES`,
-    `Target Min: ${calculated.targetRealistis1} (+${calculateGain(calculated.targetRealistis1)}%)`,
-    `Target Max: ${calculated.targetMax} (+${calculateGain(calculated.targetMax)}%)`,
+    `Target 1: ${calculated.targetRealistis1} (+${calculateGain(calculated.targetRealistis1)}%)`,
+    `Target 2: ${calculated.targetMax} (+${calculateGain(calculated.targetMax)}%)`,
   ];
 
   return lines.join('\n');
@@ -136,32 +135,46 @@ export default function Calculator({ selectedStock }: CalculatorProps) {
         scale: 2,
       });
 
-      canvas.toBlob(async (blob) => {
-        if (!blob) return;
-        try {
-          const item = new ClipboardItem({ 'image/png': blob });
-          await navigator.clipboard.write([item]);
-          setCopiedImage(true);
-          setTimeout(() => setCopiedImage(false), 2000);
-        } catch (err) {
-          console.error('Failed to copy image:', err);
-          setError('Failed to copy image to clipboard');
+      // Wrap toBlob in a Promise to keep the async chain active for Safari's strict user-gesture checks
+      const blob = await new Promise<Blob | null>((resolve) => 
+        canvas.toBlob(resolve, 'image/png')
+      );
+
+      if (!blob) throw new Error('Failed to generate image blob');
+
+      try {
+        const item = new ClipboardItem({ 'image/png': blob });
+        await navigator.clipboard.write([item]);
+        setCopiedImage(true);
+        setTimeout(() => setCopiedImage(false), 2000);
+      } catch (err) {
+        console.error('Clipboard write failed:', err);
+        
+        // 1. Fallback for iOS Safari / Mobile: Web Share API
+        // This opens the native share sheet which is often preferred on mobile
+        if (navigator.share && navigator.canShare) {
+            const file = new File([blob], `${result?.input.emiten || 'stock'}-analysis.png`, { type: 'image/png' });
+            if (navigator.canShare({ files: [file] })) {
+                await navigator.share({
+                    files: [file],
+                    title: 'Stock Analysis Result',
+                });
+                return; 
+            }
         }
-      });
+        
+        // 2. If all else fails
+        throw err;
+      }
     } catch (err) {
       console.error('Failed to generate image:', err);
-      setError('Failed to generate image');
+      setError('Failed to copy image. Try taking a screenshot manually.');
     }
   };
 
   return (
     <div className="container">
-      <div className="text-center mb-4">
-        <h1>📈 Stock Target Calculator</h1>
-        <p className="text-secondary" style={{ fontSize: '1.125rem' }}>
-          Analyze stock targets based on broker data from Stockbit
-        </p>
-      </div>
+      <div className="mb-4"></div>
 
       <InputForm
         onSubmit={handleSubmit}

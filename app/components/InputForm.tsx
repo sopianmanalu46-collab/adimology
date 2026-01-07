@@ -53,7 +53,7 @@ export default function InputForm({
   };
 
   return (
-    <form onSubmit={handleSubmit} className="glass-card compact-form">
+    <form onSubmit={handleSubmit} className="glass-card-static compact-form">
       <div className="compact-form-header">
         <h3>🔍 Analyze Stock</h3>
         <div className="quick-dates">
@@ -90,6 +90,7 @@ export default function InputForm({
               className="input-field compact-input"
               value={fromDate}
               onChange={(e) => onDateChange(e.target.value, toDate)}
+              onClick={(e) => e.currentTarget.showPicker()}
               required
             />
             <span className="date-separator">→</span>
@@ -99,6 +100,7 @@ export default function InputForm({
               className="input-field compact-input"
               value={toDate}
               onChange={(e) => onDateChange(fromDate, e.target.value)}
+              onClick={(e) => e.currentTarget.showPicker()}
               required
             />
           </div>
