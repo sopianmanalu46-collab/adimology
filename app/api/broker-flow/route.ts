@@ -15,13 +15,19 @@ export async function GET(request: NextRequest) {
   }
 
   try {
+    // Transform brokerStatus for the upstream API: 'Mix' -> 'Retail / Bandar'
+    const upstreamBrokerStatus = brokerStatus
+      .split(',')
+      .map(s => s.trim() === 'Mix' ? 'Retail / Bandar' : s.trim())
+      .join(',');
+
     const url = new URL('https://api.tradersaham.com/api/market-insight/broker-intelligence');
     url.searchParams.set('limit', '100');
     url.searchParams.set('page', '1');
     url.searchParams.set('sort_by', 'consistency');
     url.searchParams.set('mode', 'accum');
     url.searchParams.set('lookback_days', lookbackDays);
-    url.searchParams.set('broker_status', brokerStatus);
+    url.searchParams.set('broker_status', upstreamBrokerStatus);
     url.searchParams.set('search', emiten.toLowerCase());
 
     const response = await fetch(url.toString(), {
@@ -36,11 +42,19 @@ export async function GET(request: NextRequest) {
       throw new Error(`Tradersaham API returned ${response.status}`);
     }
 
-    const data: BrokerFlowResponse = await response.json();
+    const rawData = await response.json();
+    
+    // Map 'Retail / Bandar' back to 'Mix' in the response activities
+    if (rawData && rawData.activities) {
+      rawData.activities = rawData.activities.map((activity: any) => ({
+        ...activity,
+        broker_status: activity.broker_status === 'Retail / Bandar' ? 'Mix' : activity.broker_status
+      }));
+    }
 
     return NextResponse.json({
       success: true,
-      data,
+      data: rawData,
     });
   } catch (error) {
     console.error('Broker Flow API error:', error);
